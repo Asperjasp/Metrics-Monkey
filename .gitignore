@@ -4,6 +4,8 @@ __pycache__/
 *.pyo
 .DS_Store
 results/*.json
+# PNGs are committed after each run so the repo shows live results
+
 *.egg-info/
 .venv/
 venv/

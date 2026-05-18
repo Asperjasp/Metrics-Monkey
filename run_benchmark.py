@@ -32,6 +32,8 @@ from models.ollama_model import OllamaModel
 from models.openrouter_model import OpenRouterModel
 from benchmark.evaluator import Evaluator
 from results.report import print_summary_table, print_per_case_table, export_markdown
+from results.visualize import generate_all as generate_figures
+from results.team_report import generate as generate_team_report
 
 
 def build_model(key: str, cfg: dict):
@@ -109,6 +111,15 @@ def main():
     if args.markdown:
         md_path = Path("results") / "benchmark_report.md"
         export_markdown(results, str(md_path))
+
+        # Generate figures
+        print("\nGenerating figures...")
+        generate_figures(str(results_path))
+
+        # Generate team report
+        team_path = Path("results") / "team_report.md"
+        generate_team_report(results, out_path=str(team_path))
+        print(f"Team report → {team_path}")
 
     return str(results_path)
 
