@@ -1,7 +1,23 @@
 # Phone Test Results — AI Edge Gallery vs Desktop Ollama
 
 > Desktop run: `python phone_test.py --save`  
-> 📱 Phone screenshots → `results/phone/screenshots/P1_E2B.png`, `P1_E4B.png`, etc.
+> 📱 Phone screenshots → `results/phone/screenshots/P1_E2B.png`, `P1_E4B.png`, etc.  
+> 🎬 Demo video → `results/media/phone_demo.mp4` (or link below once uploaded)
+
+## Screenshot Status
+
+| File | Model | Question | Status |
+|---|---|---|---|
+| `screenshots/P1_E2B.png` | Gemma E2B (2B) | Cold start / misfire | **pending** |
+| `screenshots/P1_E4B.png` | Gemma E4B (8B) | Cold start / misfire | pending E4B re-pull |
+| `screenshots/P2_E2B.png` | Gemma E2B (2B) | Brake fluid procedure | pending |
+| `screenshots/P2_E4B.png` | Gemma E4B (8B) | Brake fluid procedure | pending E4B re-pull |
+| `screenshots/P3_E2B.png` | Gemma E2B (2B) | Fork dive diagnosis | pending |
+| `screenshots/P3_E4B.png` | Gemma E4B (8B) | Fork dive diagnosis | pending E4B re-pull |
+| `screenshots/P4_E2B.png` | Gemma E2B (2B) | Spark plug intervals | pending |
+| `screenshots/P4_E4B.png` | Gemma E4B (8B) | Spark plug intervals | pending E4B re-pull |
+| `screenshots/P5_E2B.png` | Gemma E2B (2B) | Oil viscosity / vibration | pending |
+| `screenshots/P5_E4B.png` | Gemma E4B (8B) | Oil viscosity / vibration | pending E4B re-pull |
 
 ---
 

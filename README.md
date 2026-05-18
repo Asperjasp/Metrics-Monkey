@@ -197,6 +197,31 @@ python phone_test.py --save   # outputs results/phone/phone_test.md
 
 Screenshots from AI Edge Gallery go in `results/phone/screenshots/` named `P1_E2B.png`, `P1_E4B.png` … `P5_E2B.png`, `P5_E4B.png`.
 
+### Demo Video
+
+A screen recording of the 5 questions running live across models is stored in `results/media/`.  
+Drop your video file here: `results/media/phone_demo.mp4`
+
+> For files >50 MB, upload via GitHub release instead:  
+> `gh release create v1.0-phone-demo results/media/phone_demo.mp4 --title "Phone demo v1" --notes "AI Edge Gallery live run"`
+
+### How to add your phone screenshots
+
+**From Android → Linux over USB:**
+```bash
+# Mount phone via MTP, then:
+cp /run/user/1000/gvfs/mtp*/DCIM/Screenshots/P1_E2B.jpg \
+   results/phone/screenshots/P1_E2B.png
+```
+
+**Or just copy any way you like, then commit:**
+```bash
+git add results/phone/screenshots/
+git add results/media/
+git commit -m "Add phone test screenshots and demo video"
+git push
+```
+
 ---
 
 ## Quick Start
