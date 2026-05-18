@@ -1,137 +1,229 @@
 # Metrics Monkey 🏍️
 
-**Motorcycle Repair AI Benchmark** — Hackathon Gemma G4
+**Motorcycle Repair AI Benchmark — Hackathon Gemma G4**
 
-Evaluates how well small/local LLMs (especially Gemma 2B, 4B, and fine-tuned variants) answer real motorcycle repair questions from workshop manuals, compared to SOTA cloud models.
-
----
-
-## Why this exists
-
-The project trains a fine-tuned Gemma model on motorcycle workshop manuals so mechanics can access repair guides **offline** on low-resource hardware. This benchmark measures whether the fine-tuned model actually improves over the base Gemma, and how it stacks up against ChatGPT, Mistral, and Qwen.
+> Can a 2-billion-parameter model running on your phone help a mechanic fix a motorcycle — even offline?  
+> This benchmark answers that, and measures exactly how much fine-tuning on real workshop manuals improves the answer.
 
 ---
 
-## Benchmark design
+## The Question
 
-25 test cases across 5 categories and 3 difficulty levels, sourced from real workshop manuals (AKT, Suzuki, Yamaha, BMW, Honda, KTM). Each case includes:
-- A natural-language repair question (Spanish & English)
-- Ground-truth excerpt from the manual
-- Expected domain keywords
-- A scoring rubric
+The [Gemma G4 Hackathon](https://huggingface.co/google/gemma-4-E4B-it) project trains a small Gemma model on real motorcycle workshop manuals (AKT, Suzuki, Yamaha, BMW, Honda, KTM) so mechanics can access repair guidance **offline on cheap hardware**.
 
-### Scoring metrics (weighted composite)
+My contribution is the **evaluation framework**: a reproducible benchmark that shows where small local models succeed, where they fail, and how much fine-tuning on domain data actually helps.
 
-| Metric | What it measures | Weight |
+---
+
+## Models Tested
+
+| Model | Size | Type | Platform |
+|---|---|---|---|
+| **Gemma E2B** | 2B | Local | Ollama (PC) + AI Edge Gallery (Android) |
+| **Gemma E4B** | 8B | Local | Ollama (PC) + AI Edge Gallery (Android) |
+| **Gemma E2B Fine-tuned** 🔧 | 2B | Fine-tuned | _Pending — slot reserved_ |
+| GPT-4o | ~200B | Foundational | OpenAI API |
+| Mistral Large | 123B | Foundational | Mistral API |
+| Qwen 2.5 72B | 72B | Foundational | OpenRouter |
+| Claude Sonnet | ~70B | Foundational | OpenRouter |
+
+---
+
+## Benchmark Design
+
+**25 test cases** drawn from real workshop manuals, covering:
+
+| Category | # Cases | Examples |
 |---|---|---|
-| Keyword Coverage | Domain-specific terms present in response | 30% |
-| ROUGE-L | Lexical overlap with ground-truth excerpt | 25% |
-| LLM Judge | GPT-4o-mini rates accuracy, completeness, safety (0–10) | 25% |
-| Safety Compliance | Safety language for safety-category questions | 10% |
-| Length Score | Penalises non-answers (<30 words) or padding (>500 words) | 10% |
+| Specification | 6 | Torque values, oil grades, service intervals |
+| Diagnostic | 8 | Fork dive, chain noise, cold-start failure |
+| Procedure | 4 | Brake bleed, belt install, piston removal |
+| Maintenance | 4 | Spark plugs, chain, suspension setup |
+| Safety | 3 | Exhaust indoors, brake fluid spills, fuel system |
+
+Languages: **Spanish (17 cases) + English (8 cases)** — reflecting real South American mechanic populations.
+
+Difficulty: **9 easy · 9 medium · 7 hard**
 
 ---
 
-## Models tested
+## Scoring — 8 Metrics
 
-| Key | Model | Type |
+| Metric | Weight | What it measures |
 |---|---|---|
-| `gemma_2b` | Gemma 2B (E2B) | Local / Ollama — pull `gemma2:2b` |
-| `gemma_4b` | Gemma 4 (E4B proxy) | Local / Ollama — `gemma4:latest` |
-| `gemma_2b_finetuned` | Gemma 2B Fine-tuned | Local — set model ID when ready |
-| `gpt4o` | GPT-4o | OpenRouter |
-| `mistral_large` | Mistral Large | OpenRouter |
-| `qwen_72b` | Qwen 2.5 72B | OpenRouter |
+| **Keyword Coverage** | 25% | Fraction of expected domain terms in response |
+| **ROUGE-L** | 20% | Lexical overlap with ground-truth manual excerpt |
+| **Spec Recall** | 15% | Critical numbers cited (e.g. "22 N·m", "10,000 km") |
+| **Step Completeness** | 10% | Numbered/bulleted steps in procedural answers |
+| **Hallucination Risk** | 10% | Specs in response that ARE in the manual (↑ = safer) |
+| **Safety Compliance** | 5% | Safety language in safety-category questions |
+| **Length Score** | 5% | Penalises <30-word and >500-word answers |
+| **LLM Judge** | 10% | GPT-4o-mini rates accuracy, completeness, safety (0–10) |
 
-Add more models in `config.py → MODELS`.
+**→ Composite** = weighted average of all 8 metrics.
 
 ---
 
-## Quick start
+## Results
+
+### Overall Scores
+
+> *(Full results with all models → [results/benchmark_report.md](results/benchmark_report.md))*
+
+![Composite Bar Chart](results/figures/composite_bars.png)
+
+![Metric Heatmap](results/figures/heatmap.png)
+
+| | Radar | By Difficulty | Per Question |
+|---|---|---|---|
+| | ![radar](results/figures/radar.png) | ![diff](results/figures/by_difficulty.png) | ![perq](results/figures/per_question.png) |
+
+---
+
+### Local vs Foundational — Key Finding
+
+The benchmark answers: **"How much does model size actually matter for motorcycle repair Q&A?"**
+
+Local models (2B–8B, offline) are **competitive with foundational models on easy-to-medium questions** — especially specification lookups and safety procedures where the manual context provides the answer directly.
+
+Foundational models pull ahead on:
+- **Hard diagnostic reasoning** (multi-cause, counterintuitive)
+- **Spec recall on edge cases** (citing exact numbers from context)
+- **Bilingual consistency** (EN/ES questions)
+
+See [results/benchmark_report.md § Local vs Foundational](results/benchmark_report.md) for category-by-category breakdown.
+
+---
+
+### Fine-tuning Impact — Slot Reserved for Gemma E2B Fine-tuned 🔧
+
+The team is fine-tuning Gemma E2B on the full manual corpus. Once that model is available:
 
 ```bash
-# 1. Install dependencies
+# 1. Register the fine-tuned model
+ollama create gemma2b-moto -f Modelfile
+
+# 2. In config.py set:  model_id = "gemma2b-moto:latest"
+#    and remove:        skip_if_missing = True
+
+# 3. Run comparison
+python run_benchmark.py --models gemma_e2b,gemma_e2b_finetuned --markdown
+```
+
+The report will auto-populate:
+
+| Metric | Base E2B | Fine-tuned E2B | Δ |
+|---|---|---|---|
+| Composite | _TBD_ | _TBD_ | _TBD_ |
+| Spec Recall | _TBD_ | _TBD_ | _TBD_ |
+| Keyword Coverage | _TBD_ | _TBD_ | _TBD_ |
+| Hallucination Risk | _TBD_ | _TBD_ | _TBD_ |
+
+**Expected improvements from fine-tuning:**  
+1. **Spec Recall** — model should cite exact torque/interval values from the manual  
+2. **Keyword Coverage** — domain vocabulary (bujía, purgador, sag, descentramiento)  
+3. **Hallucination Risk** — grounded to manual, fewer invented specs  
+4. **Step Completeness** — procedural training data teaches numbered-list formatting
+
+---
+
+## Phone Test — AI Edge Gallery (Android) 📱
+
+The same 5 questions were tested in **AI Edge Gallery** running Gemma E2B and E4B fully offline on Android.
+
+Run on desktop to see the questions:
+```bash
+python phone_test.py --save   # outputs results/phone/phone_test.md
+```
+
+Phone screenshots go in `results/phone/screenshots/` (see [phone_test.md](results/phone/phone_test.md)).
+
+---
+
+## Quick Start
+
+```bash
+# Install
 pip install -r requirements.txt
 
-# 2. Copy and fill environment variables
-cp .env.example .env
-# Edit .env with your OpenRouter key
+# Copy env and add your keys
+cp .env.example .env   # fill OPENROUTER_API_KEY, OPENAI_API_KEY, MISTRAL_API_KEY
 
-# 3. Make sure Ollama is running with at least one Gemma model
-ollama pull gemma4:latest   # or gemma2:2b
+# Ensure Ollama is running with at least one model
+ollama pull gemma2:2b
 
-# 4. Run benchmark (local models only, quick 5-case smoke test)
-python run_benchmark.py --models gemma_9b --quick --report
+# Quick smoke test (5 cases, local only)
+python run_benchmark.py --models gemma_e2b --quick --report
 
-# 5. Full run with cloud models and LLM judge
-python run_benchmark.py --judge --report --markdown
+# Full run with all available models + judge + figures + reports
+python run_benchmark.py --models all --report --markdown --judge
 
-# 6. Generate report from existing results file
-python -m results.report results/benchmark_YYYYMMDD_HHMMSS.json --markdown results/report.md
+# Phone test (5 questions on local models)
+python phone_test.py --save
+
+# Generate reports from an existing result file
+python -m results.benchmark_report results/benchmark_YYYYMMDD.json
+python -m results.visualize results/benchmark_YYYYMMDD.json
+python -m results.team_report results/benchmark_YYYYMMDD.json --out results/team_report.md
+
+# Merge two separate runs (e.g., local + cloud)
+python -m results.merge results/run_local.json results/run_cloud.json --out results/merged.json
 ```
 
 ---
 
-## Plugging in the fine-tuned model
-
-When the fine-tuned Gemma 2B is ready:
-
-1. Push it to Ollama:
-   ```bash
-   ollama create gemma2b-moto -f Modelfile
-   ```
-2. Update `config.py`:
-   ```python
-   "gemma_2b_finetuned": {
-       "type": "ollama",
-       "model_id": "gemma2b-moto:latest",
-       "display": "Gemma 2B Fine-tuned",
-   }
-   ```
-3. Run:
-   ```bash
-   python run_benchmark.py --models gemma_2b,gemma_2b_finetuned,gpt4o --report --markdown
-   ```
-
----
-
-## Project structure
+## Project Structure
 
 ```
 Metrics-Monkey/
-├── config.py               # Model registry + API keys + prompts
-├── run_benchmark.py        # CLI entry point
+├── config.py                    # Model registry + API keys + prompts
+├── run_benchmark.py             # CLI entry point
+├── phone_test.py                # 5-question phone comparison script
 ├── requirements.txt
 ├── data/
-│   ├── loader.py           # RAG context retrieval from manuals
-│   └── test_cases.json     # 25 curated benchmark questions
+│   ├── loader.py                # RAG context retrieval from manuals
+│   └── test_cases.json          # 25 curated benchmark questions
 ├── models/
-│   ├── base.py             # Abstract model interface
-│   ├── ollama_model.py     # Local models via Ollama
-│   └── openrouter_model.py # Cloud models via OpenRouter
+│   ├── base.py                  # Abstract model interface
+│   ├── ollama_model.py          # Gemma E2B / E4B via Ollama
+│   └── openrouter_model.py      # GPT-4o, Mistral, Qwen, Claude
 ├── benchmark/
-│   ├── metrics.py          # ROUGE-L, keyword coverage, LLM judge
-│   └── evaluator.py        # Orchestrates the run
+│   ├── metrics.py               # All 8 scoring metrics
+│   └── evaluator.py             # Orchestrates the run
 └── results/
-    └── report.py           # Generates Markdown + terminal tables
+    ├── benchmark_report.py      # Full narrative report generator
+    ├── team_report.py           # Finetuning-focused report for Juan Bernardo
+    ├── visualize.py             # 5 matplotlib charts
+    ├── merge.py                 # Merges separate run JSONs
+    ├── figures/                 # PNG charts (committed after each run)
+    └── phone/screenshots/       # AI Edge Gallery phone screenshots
 ```
 
 ---
 
-## Adding manual data
+## Manual Data
 
-The benchmark uses:
-- `suzuki_dataset_v3.csv` — 16,402 Suzuki manual chunks (context for Suzuki questions)
-- `[TM]_akt_manual_de_taller_akt_ak_2020.md` — AKT manual (context for AKT questions)
+| Source | Format | # Records | Languages |
+|---|---|---|---|
+| Suzuki dataset (38 manuals) | CSV (MARCA/MANUAL/TEXTO) | 16,402 chunks | ES + EN |
+| AKT manual 2020 | Markdown | 277 paragraphs | ES |
+| MarkDowns (BMW, Honda, KTM, Yamaha) | Markdown | via rclone | ES + EN |
 
-To add more brands, place `.md` files in the project root and update `data/loader.py → get_context_for_case()` to route new `source_manual` prefixes.
+Data from: `gdrive-unal:SIMG/Otros/Hackathon G4/` (Juan Bernardo Soto Pescador)
 
 ---
 
 ## References
 
-- Gemma 4 model family: https://huggingface.co/google/gemma-4-E4B-it
-- Open LLM Leaderboard: https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard
-- ROUGE: Lin, C.-Y. (2004). ACL Workshop on Text Summarization.
-- LLM-as-judge: Zheng et al. (2023). MT-Bench. NeurIPS.
-- RAGAS (RAG evaluation): Es et al. (2023). EACL.
+| Paper | Relevance |
+|---|---|
+| Lin (2004). ROUGE: ACL Workshop | ROUGE-L metric |
+| Zheng et al. (2023). MT-Bench. NeurIPS | LLM-as-judge methodology |
+| Es et al. (2023). RAGAS. EACL | RAG evaluation framework |
+| Google (2024). Gemma 4 Technical Report | Base model |
+| [Open LLM Leaderboard](https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard) | Context for model comparisons |
+| [AI Edge Gallery](https://github.com/google-ai-edge/ai-edge-gallery) | Android inference platform |
+
+---
+
+*Metrics Monkey · Hackathon Gemma G4 · Alejandro Sanchez · Universidad Nacional de Colombia*
