@@ -1,10 +1,10 @@
 # Metrics Monkey — Benchmark Results
 
 **Run date:** 2026-05-18  
-**Models tested:** Gemma 9B (local)  
-**Test cases:** 5  
+**Models tested:** Gemma E2B (2B local), GPT-4o, Mistral Large, Qwen 2.5 72B, Claude Sonnet  
+**Test cases:** 25  
 **Context (RAG):** yes  
-**LLM judge:** no  
+**LLM judge:** yes  
 
 ---
 
@@ -12,7 +12,11 @@
 
 | Model | Composite ↑ | KW Coverage ↑ | ROUGE-L ↑ | Length ↑ | Avg Latency |
 |---|---|---|---|---|---|
-| Gemma 9B (local) | **0.718** | 0.651 | 0.468 | 0.800 | 108.9s |
+| Claude Sonnet | **0.806** | 0.909 | 0.239 | 1.000 | 8.4s |
+| GPT-4o | **0.781** | 0.817 | 0.254 | 0.985 | 5.2s |
+| Qwen 2.5 72B | **0.769** | 0.781 | 0.190 | 0.987 | 24.1s |
+| Gemma E2B (2B local) | **0.731** | 0.652 | 0.249 | 0.968 | 53.5s |
+| Mistral Large | **0.703** | 0.812 | 0.115 | 0.878 | 18.7s |
 
 ---
 
@@ -20,15 +24,23 @@
 
 | Model | Easy | Medium | Hard |
 |---|---|---|---|
-| Gemma 9B (local) | 0.738 | 0.642 | — |
+| Claude Sonnet | 0.793 | 0.803 | 0.841 |
+| GPT-4o | 0.768 | 0.792 | 0.771 |
+| Qwen 2.5 72B | 0.753 | 0.804 | 0.709 |
+| Gemma E2B (2B local) | 0.74 | 0.746 | 0.663 |
+| Mistral Large | 0.693 | 0.7 | 0.73 |
 
 ---
 
 ## Scores by Category
 
-| Model | Diagnostic | Safety | Specificat |
-|---|---|---|---|
-| Gemma 9B (local) | 0.642 | 0.615 | 0.778 |
+| Model | Diagnostic | Maintenanc | Procedure | Safety | Specificat |
+|---|---|---|---|---|---|
+| Claude Sonnet | 0.796 | 0.83 | 0.824 | 0.784 | 0.806 |
+| GPT-4o | 0.781 | 0.772 | 0.793 | 0.752 | 0.798 |
+| Qwen 2.5 72B | 0.786 | 0.753 | 0.756 | 0.759 | 0.785 |
+| Gemma E2B (2B local) | 0.687 | 0.778 | 0.757 | 0.696 | 0.774 |
+| Mistral Large | 0.713 | 0.673 | 0.688 | 0.764 | 0.669 |
 
 ---
 

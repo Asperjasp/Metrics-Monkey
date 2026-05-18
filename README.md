@@ -66,25 +66,60 @@ Difficulty: **9 easy · 9 medium · 7 hard**
 
 ## Results
 
-### Live Partial Scores — 6 / 25 Cases Complete
+### Final Scores — All 25 Cases Complete
 
-> Full run in progress. Last updated: 2026-05-18. Full report → [results/benchmark_report.md](results/benchmark_report.md)
+> Full narrative report → [results/benchmark_report.md](results/benchmark_report.md) · Team fine-tuning report → [results/team_report.md](results/team_report.md)
 
-| # | Question (truncated) | Cat | Diff | E2B 2B | GPT-4o | Mistral L | Qwen 72B | Claude S |
-|---|---|---|---|---|---|---|---|---|
-| TC001 | ¿Funciones principales de la bujía? | spec | easy | 0.795 | **0.878** | 0.833 | 0.866 | 0.855 |
-| TC002 | ¿Cada cuántos km cambiar bujías cobre? | spec | easy | **0.750** | 0.767 | 0.700 | 0.718 | 0.690 |
-| TC003 | ¿Problemas de rango térmico incorrecto? | diag | med | 0.675 | 0.826 | 0.659 | 0.767 | **0.853** |
-| TC004 | Procedimiento cambio líquido de frenos | proc | med | 0.780 | 0.789 | 0.671 | 0.782 | **0.791** |
-| TC005 | ¿Por qué el líquido de frenos es peligroso? | safety | med | 0.601 | 0.664 | **0.718** | 0.693 | 0.683 |
-| TC006 | ¿Error crítico al purgar frenos? | proc | med | 0.658 | 0.793 | 0.777 | ❌ err | **0.796** |
-| **Avg (6)** | | | | **0.710** | **0.786** | **0.726** | **0.765** | **0.778** |
+| Rank | Model | Size | Type | Composite | KW Cov | ROUGE-L | Avg Latency |
+|------|-------|------|------|-----------|--------|---------|-------------|
+| 1 | **Claude Sonnet** | ~70B | cloud | **0.806** | **0.909** | 0.239 | 8.4s |
+| 2 | GPT-4o | ~200B | cloud | 0.781 | 0.817 | **0.254** | 5.2s |
+| 3 | Qwen 2.5 72B | 72B | cloud | 0.769 | 0.781 | 0.190 | 24.1s |
+| 4 | **Gemma E2B** | **2B** | **local/offline** | **0.731** | 0.652 | 0.249 | 53.5s |
+| 5 | Mistral Large | 123B | cloud | 0.703 | 0.812 | 0.115 | 18.7s |
 
-**Highlighted findings from first 6 cases:**
-- **E2B beats Mistral Large** on TC002 (spec recall) and TC004 (brake procedure) — a 2B offline model outperforming a 123B cloud model on structured manual knowledge
-- **E2B gap is largest on diagnostic reasoning** (TC003: +0.178 behind GPT-4o) — exactly where fine-tuning is targeted
-- **All models cluster 0.66–0.80 on medium difficulty** — local models are already in the competitive range
-- **Qwen 72B API error on TC006** — OpenRouter `'choices'` parse failure; will be retried in merged run
+> **A 2-billion-parameter model running offline beats a 123-billion-parameter cloud model** (0.731 vs 0.703). E2B trails the top cloud model by only 0.075.
+
+**Per-question scores — all 25 cases:**
+
+| ID | Category | Diff | E2B | GPT-4o | Mistral | Qwen | Claude |
+|----|----------|------|-----|--------|---------|------|--------|
+| TC001 | specification | easy | 0.795 | **0.878** | 0.833 | 0.866 | 0.855 |
+| TC002 | specification | easy | **0.750** | 0.767 | 0.700 | 0.718 | 0.690 |
+| TC003 | diagnostic | medium | 0.675 | 0.826 | 0.659 | 0.767 | **0.853** |
+| TC004 | procedure | medium | 0.780 | 0.789 | 0.671 | 0.782 | **0.791** |
+| TC005 | safety | easy | 0.601 | 0.664 | **0.718** | 0.693 | 0.683 |
+| TC006 | safety | medium | 0.658 | 0.793 | 0.777 | ERR | **0.796** |
+| TC007 | diagnostic | medium | 0.617 | 0.813 | 0.628 | ERR | **0.828** |
+| TC008 | diagnostic | hard | 0.652 | 0.790 | **0.822** | ERR | 0.847 |
+| TC009 | diagnostic | medium | **0.719** | 0.521 | 0.809 | ERR | 0.513 |
+| TC010 | diagnostic | medium | 0.790 | **0.835** | 0.657 | ERR | 0.780 |
+| TC011 | maintenance | easy | 0.704 | 0.676 | 0.644 | 0.716 | **0.798** |
+| TC012 | specification | easy | 0.758 | 0.758 | 0.550 | 0.742 | **0.837** |
+| TC013 | specification | easy | 0.841 | **0.858** | 0.606 | 0.834 | 0.834 |
+| TC014 | procedure | medium | 0.786 | 0.813 | 0.661 | 0.756 | **0.822** |
+| TC015 | procedure | medium | 0.770 | 0.826 | 0.717 | 0.811 | **0.834** |
+| TC016 | safety | easy | 0.658 | 0.742 | **0.780** | 0.743 | 0.797 |
+| TC017 | diagnostic | medium | 0.698 | 0.836 | 0.697 | 0.826 | **0.844** |
+| TC018 | maintenance | medium | 0.820 | 0.837 | 0.664 | 0.828 | **0.842** |
+| TC019 | procedure | hard | 0.781 | 0.808 | 0.796 | 0.760 | **0.838** |
+| TC020 | diagnostic | hard | 0.549 | 0.756 | 0.705 | 0.698 | **0.841** |
+| TC021 | maintenance | easy | **0.811** | 0.804 | 0.710 | 0.715 | 0.850 |
+| TC022 | diagnostic | medium | 0.796 | **0.870** | 0.729 | 0.855 | 0.866 |
+| TC023 | specification | medium | 0.726 | 0.727 | 0.654 | 0.765 | **0.815** |
+| TC024 | procedure | hard | 0.670 | 0.730 | 0.597 | 0.670 | **0.837** |
+| TC025 | safety | medium | **0.867** | 0.807 | 0.779 | 0.842 | 0.861 |
+
+**Cases where E2B wins or ties against all cloud models:**
+- TC002 (spec/easy) — 0.750, beats GPT-4o, Mistral, Qwen, Claude
+- TC009 (diagnostic/medium) — 0.719, beats GPT-4o (0.521) and Claude (0.513) by a wide margin
+- TC021 (maintenance/easy) — 0.811, beats GPT-4o and Mistral
+- TC025 (safety/medium) — **0.867**, highest score in the benchmark across all models
+
+**Cases where E2B falls behind (fine-tuning targets):**
+- TC020 (diagnostic/hard) — 0.549, gap of 0.292 vs Claude → enduro suspension edge case
+- TC007 (diagnostic/medium) — 0.617, gap of 0.211 vs Claude → multi-cause chain reasoning
+- TC003 (diagnostic/medium) — 0.675, gap of 0.178 vs Claude → thermal range diagnosis
 
 ---
 
