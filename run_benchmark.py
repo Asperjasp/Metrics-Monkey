@@ -29,7 +29,7 @@ from pathlib import Path
 
 from config import MODELS, OPENROUTER_API_KEY
 from models.ollama_model import OllamaModel
-from models.openrouter_model import OpenRouterModel
+from models.openrouter_model import OpenRouterModel, OpenAIModel, MistralModel
 from benchmark.evaluator import Evaluator
 from results.report import print_summary_table, print_per_case_table, export_markdown
 from results.visualize import generate_all as generate_figures
@@ -40,24 +40,34 @@ def build_model(key: str, cfg: dict):
     t = cfg["type"]
     if t == "ollama":
         return OllamaModel(cfg["model_id"], cfg["display"])
-    elif t in ("openrouter", "openai"):
+    elif t == "openrouter":
         return OpenRouterModel(cfg["model_id"], cfg["display"])
+    elif t == "openai":
+        return OpenAIModel(cfg["model_id"], cfg["display"])
+    elif t == "mistral":
+        return MistralModel(cfg["model_id"], cfg["display"])
     raise ValueError(f"Unknown model type: {t}")
 
 
 def main():
     parser = argparse.ArgumentParser(description="Motorcycle repair AI benchmark")
-    parser.add_argument("--models", default="", help="Comma-separated model keys")
+    parser.add_argument("--models", default="", help="Comma-separated model keys (or 'local'/'foundational'/'all')")
     parser.add_argument("--cases", default="", help="Comma-separated case IDs")
     parser.add_argument("--no-context", action="store_true", help="Disable manual context injection")
     parser.add_argument("--judge", action="store_true", help="Enable LLM-as-judge scoring")
     parser.add_argument("--report", action="store_true", help="Print tables after run")
-    parser.add_argument("--markdown", action="store_true", help="Export Markdown report")
+    parser.add_argument("--markdown", action="store_true", help="Export Markdown report + figures + team report")
     parser.add_argument("--quick", action="store_true", help="Run only first 5 cases")
     args = parser.parse_args()
 
     # Resolve which models to run
-    requested_keys = [k.strip() for k in args.models.split(",") if k.strip()] if args.models else list(MODELS.keys())
+    raw = args.models.strip()
+    if raw in ("local", "foundational", "finetuned"):
+        requested_keys = [k for k, v in MODELS.items() if v.get("group") == raw]
+    elif raw == "all" or not raw:
+        requested_keys = list(MODELS.keys())
+    else:
+        requested_keys = [k.strip() for k in raw.split(",") if k.strip()]
 
     models = []
     for key in requested_keys:
